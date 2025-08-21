@@ -148,13 +148,14 @@ export function PatientProvider({ children }: PatientProviderProps) {
         dispatch({ type: 'ADD_PATIENT', payload: response.data });
         return response.data;
       } else {
-        // Fallback - do nothing without API
-        dispatch({ type: 'SET_ERROR', payload: 'Failed to create patient' });
-        return null;
+        const msg = response.error || 'Failed to create patient';
+        dispatch({ type: 'SET_ERROR', payload: msg });
+        throw new Error(msg);
       }
-    } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: 'Network error occurred' });
-      return null;
+    } catch (error: any) {
+      const msg = error?.message || 'Network error occurred';
+      dispatch({ type: 'SET_ERROR', payload: msg });
+      throw new Error(msg);
     }
   }, []);
 

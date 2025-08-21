@@ -19,6 +19,7 @@ const PatientForm = ({ onSubmit, onCancel, isLoading = false }: PatientFormProps
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [apiError, setApiError] = useState<string | null>(null);
 
   // Add keyboard event listener for Escape key and focus management
   useEffect(() => {
@@ -65,10 +66,15 @@ const PatientForm = ({ onSubmit, onCancel, isLoading = false }: PatientFormProps
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (validateForm()) {
-      onSubmit(formData);
+    setApiError(null);
+    if (!validateForm()) return;
+    try {
+      await onSubmit(formData);
+    } catch (err: any) {
+      const msg = err?.message || 'Failed to add patient';
+      setApiError(msg);
     }
   };
 
@@ -114,6 +120,11 @@ const PatientForm = ({ onSubmit, onCancel, isLoading = false }: PatientFormProps
         </div>
         
         <form onSubmit={handleSubmit} className="space-y-4">
+          {apiError && (
+            <div className="p-3 rounded border border-red-200 bg-red-50 text-red-700 text-sm">
+              {apiError}
+            </div>
+          )}
           <div>
             <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
               Name *

@@ -222,13 +222,11 @@ export function ClaimProvider({ children }: ClaimProviderProps) {
   }, []);
 
   const updateClaimStatus = useCallback(async (id: string, status: Claim['status']): Promise<Claim | null> => {
-    dispatch({ type: 'SET_LOADING', payload: true });
     try {
       // Prevent changing status once it's approved or denied
       const current = stateRef.current.claims.find(c => c.id === id);
       if (current && current.status !== 'pending') {
         dispatch({ type: 'SET_ERROR', payload: 'This claim status is final and cannot be changed.' });
-        dispatch({ type: 'SET_LOADING', payload: false });
         return null;
       }
       const response = await claimApi.updateStatus(id, status);

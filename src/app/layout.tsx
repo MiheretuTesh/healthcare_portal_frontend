@@ -34,6 +34,8 @@ export default function RootLayout({
           <main className="min-h-screen bg-gray-50">
             {children}
           </main>
+          {/* Global toast container */}
+          <div id="toast-root" className="fixed top-4 right-4 z-[1000] flex flex-col gap-3" />
         </AppProvider>
       </body>
     </html>

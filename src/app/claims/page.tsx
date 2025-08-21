@@ -94,18 +94,10 @@ const ClaimsPage = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex justify-center items-center h-64">
-          <LoadingSpinner size="lg" text="Loading claims..." />
-        </div>
-      </div>
-    );
-  }
+  const isInitialLoading = loading && filteredClaims.length === 0;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
@@ -282,6 +274,13 @@ const ClaimsPage = () => {
           </div>
         )}
       </div>
+
+      {/* Overlay loader during status update */}
+      {loading && filteredClaims.length > 0 && (
+        <div className="absolute inset-0 bg-white/60 flex items-center justify-center rounded-md">
+          <LoadingSpinner size="md" text="Updating..." />
+        </div>
+      )}
 
       {/* Add Claim Form Modal */}
       {showForm && (
