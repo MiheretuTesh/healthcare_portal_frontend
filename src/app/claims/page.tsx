@@ -6,7 +6,7 @@ import { Claim, ClaimStatus } from '@/types';
 import { useClaim } from '@/contexts/AppProvider';
 import ClaimForm from '@/components/ClaimForm';
 import LoadingSpinner from '@/components/LoadingSpinner';
-import { formatDate, formatCurrency } from '@/lib/utils';
+import { formatDate, formatCurrency, showToast } from '@/lib/utils';
 import ConfirmModal from '@/components/ConfirmModal';
 
 const ClaimsPage = () => {
@@ -34,17 +34,12 @@ const ClaimsPage = () => {
       const newClaim = await actions.createClaim(claimData);
       if (newClaim) {
         setShowForm(false);
-        setMessage({ type: 'success', text: 'Claim added successfully!' });
-        
-        // Clear message after 3 seconds
-        setTimeout(() => setMessage(null), 3000);
+        showToast('success', 'Claim added successfully!');
       } else {
-        setMessage({ type: 'error', text: 'Failed to add claim. Please try again.' });
-        setTimeout(() => setMessage(null), 3000);
+        showToast('error', 'Failed to add claim. Please try again.');
       }
     } catch (error) {
-      setMessage({ type: 'error', text: 'Failed to add claim. Please try again.' });
-      setTimeout(() => setMessage(null), 3000);
+      showToast('error', 'Failed to add claim. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -55,15 +50,12 @@ const ClaimsPage = () => {
     try {
       const updatedClaim = await actions.updateClaimStatus(claimId, newStatus);
       if (updatedClaim) {
-        setMessage({ type: 'success', text: `Claim status updated to ${newStatus}!` });
-        setTimeout(() => setMessage(null), 3000);
+        showToast('success', `Claim status updated to ${newStatus}!`);
       } else {
-        setMessage({ type: 'error', text: 'Failed to update claim status. Please try again.' });
-        setTimeout(() => setMessage(null), 3000);
+        showToast('error', 'Failed to update claim status. Please try again.');
       }
     } catch (error) {
-      setMessage({ type: 'error', text: 'Failed to update claim status. Please try again.' });
-      setTimeout(() => setMessage(null), 3000);
+      showToast('error', 'Failed to update claim status. Please try again.');
     } finally {
       setUpdatingClaim(null);
     }

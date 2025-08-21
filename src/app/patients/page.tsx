@@ -7,6 +7,7 @@ import { usePatient } from '@/contexts/AppProvider';
 import PatientForm from '@/components/PatientForm';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { CreatePatientRequest } from '@/types/api';
+import { showToast } from '@/lib/utils';
 
 const PatientsPage = () => {
   const { state, actions } = usePatient();
@@ -26,17 +27,12 @@ const PatientsPage = () => {
       const newPatient = await actions.createPatient(patientData);
       if (newPatient) {
         setShowForm(false);
-        setMessage({ type: 'success', text: 'Patient added successfully!' });
-        
-        // Clear message after 3 seconds
-        setTimeout(() => setMessage(null), 3000);
+        showToast('success', 'Patient added successfully!');
       } else {
-        setMessage({ type: 'error', text: 'Failed to add patient. Please try again.' });
-        setTimeout(() => setMessage(null), 3000);
+        showToast('error', 'Failed to add patient. Please try again.');
       }
-    } catch (error) {
-      setMessage({ type: 'error', text: 'Failed to add patient. Please try again.' });
-      setTimeout(() => setMessage(null), 3000);
+    } catch (error: any) {
+      showToast('error', error?.message || 'Failed to add patient. Please try again.');
     } finally {
       setIsSubmitting(false);
     }

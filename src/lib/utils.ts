@@ -41,3 +41,19 @@ export const formatCurrency = (amount: number): string => {
     currency: 'USD'
   }).format(amount);
 };
+
+// Simple toast helper to render into #toast-root
+export const showToast = (type: 'success' | 'error', text: string, timeoutMs = 3000) => {
+  if (typeof document === 'undefined') return;
+  const root = document.getElementById('toast-root');
+  if (!root) return;
+  const el = document.createElement('div');
+  el.className = 'animate-[fadeIn_0.2s_ease-out]';
+  el.innerHTML = `<div class="min-w-[260px] max-w-sm rounded-md shadow-lg px-4 py-3 border text-sm ${
+    type === 'success' ? 'bg-green-50 border-green-200 text-green-800' : 'bg-red-50 border-red-200 text-red-800'
+  }">${text}</div>`;
+  root.appendChild(el);
+  setTimeout(() => {
+    if (el.parentNode) root.removeChild(el);
+  }, timeoutMs);
+};
