@@ -26,6 +26,17 @@ const PatientClaimsPage = () => {
     }
   }, [patientId, claimActions, patientActions, patient]);
 
+  const getStatusBadgeColor = (status: string) => {
+    switch (status) {
+      case 'approved':
+        return 'bg-green-100 text-green-800';
+      case 'denied':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-yellow-100 text-yellow-800';
+    }
+  };
+
   const isInitialLoading = claimState.loading && claimState.filteredClaims.length === 0;
 
   return (
@@ -37,7 +48,7 @@ const PatientClaimsPage = () => {
             <p className="text-gray-600 text-sm">{patient.email} • {patient.phone} • {patient.insuranceProvider}</p>
           )}
         </div>
-        <Link href="/claims" className="text-blue-600 hover:text-blue-800 text-sm">← Back to All Claims</Link>
+        <Link href="/patients" className="text-blue-600 hover:text-blue-800 text-sm">← Back to Patients</Link>
       </div>
 
       {isInitialLoading ? (
@@ -70,7 +81,7 @@ const PatientClaimsPage = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{claim.claimNumber}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{formatCurrency(claim.amount)}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeColor(claim.status)}`}>
                           {claim.status.charAt(0).toUpperCase() + claim.status.slice(1)}
                         </span>
                       </td>
