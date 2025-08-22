@@ -12,9 +12,17 @@ npm install
 ```
 
 2) Configure environment
-Create `.env.local` with your backend base URL (no trailing slash):
+Create `.env.local` with environment-aware API URLs (no trailing slash):
 ```bash
-NEXT_PUBLIC_API_URL=http://localhost:3001
+# One of: development | production
+NEXT_PUBLIC_APP_ENV=development
+
+# Development API base
+NEXT_PUBLIC_API_URL_DEV=http://localhost:3001
+
+# Production API base (deployed backend)
+# Example: https://api.my-healthcare-portal.com
+NEXT_PUBLIC_API_URL_PROD=https://your-deployed-backend.example.com
 ```
 
 3) Run
@@ -35,7 +43,9 @@ npm run dev
 - Inputs use clear validation, loading states, and success/error messages.
 
 ## API expectations (backend)
-Backend base: `NEXT_PUBLIC_API_URL`
+Backend base is selected by env:
+- If `NEXT_PUBLIC_APP_ENV=production` uses `NEXT_PUBLIC_API_URL_PROD`
+- Else uses `NEXT_PUBLIC_API_URL_DEV` (fallback to `NEXT_PUBLIC_API_URL` or `http://localhost:3001`)
 
 Patients
 - `GET /patients` — list

@@ -6,6 +6,7 @@ import { Patient } from '@/types';
 import { usePatient } from '@/contexts/AppProvider';
 import PatientForm from '@/components/PatientForm';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import TableSkeleton from '@/components/TableSkeleton';
 import { CreatePatientRequest } from '@/types/api';
 import { showToast } from '@/lib/utils';
 
@@ -40,15 +41,7 @@ const PatientsPage = () => {
 
 
 
-  if (loading) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex justify-center items-center h-64">
-          <LoadingSpinner size="lg" text="Loading patients..." />
-        </div>
-      </div>
-    );
-  }
+  const isInitialLoading = loading && patients.length === 0;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -80,60 +73,54 @@ const PatientsPage = () => {
       </div>
 
       {/* Patients Table */}
-      <div className="bg-white shadow overflow-hidden sm:rounded-md">
-        <div className="px-4 py-5 sm:px-6">
-          <h3 className="text-lg leading-6 font-medium text-gray-900">
-            Patient List ({patients.length})
-          </h3>
-        </div>
-        
-        {patients.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-gray-500">No patients found. Add your first patient to get started.</p>
+      {isInitialLoading ? (
+        <TableSkeleton columns={4} title="Loading patients" />
+      ) : (
+        <div className="relative bg-white shadow overflow-hidden sm:rounded-md">
+          <div className="px-4 py-5 sm:px-6">
+            <h3 className="text-lg leading-6 font-medium text-gray-900">
+              Patient List ({patients.length})
+            </h3>
           </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Name
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Email
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Phone
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Insurance Provider
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {patients.map((patient) => (
-                  <tr key={patient.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <Link href={`/patients/${patient.id}`} className="text-blue-600 hover:text-blue-900 font-medium">
-                        {patient.name}
-                      </Link>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {patient.email}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {patient.phone}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {patient.insuranceProvider}
-                    </td>
+          {patients.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-500">No patients found. Add your first patient to get started.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Insurance Provider</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {patients.map((patient) => (
+                    <tr key={patient.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <Link href={`/patients/${patient.id}`} className="text-blue-600 hover:text-blue-900 font-medium">
+                          {patient.name}
+                        </Link>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{patient.email}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{patient.phone}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{patient.insuranceProvider}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          {loading && patients.length > 0 && (
+            <div className="absolute inset-0 bg-white/60 flex items-center justify-center rounded-md">
+              <LoadingSpinner size="md" text="Refreshing..." />
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Add Patient Form Modal */}
       {showForm && (

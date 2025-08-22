@@ -8,8 +8,13 @@ import {
   SyncRequest
 } from '@/types/api';
 
-// Base API configuration
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+// Base API configuration via environment
+// Prefer explicit APP env mapping; fall back to a single URL or localhost
+const APP_ENV = process.env.NEXT_PUBLIC_APP_ENV || 'development';
+const API_BASE_URL =
+  APP_ENV === 'production'
+    ? (process.env.NEXT_PUBLIC_API_URL_PROD || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001')
+    : (process.env.NEXT_PUBLIC_API_URL_DEV || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001');
 
 // Generic API request handler
 async function apiRequest<T>(

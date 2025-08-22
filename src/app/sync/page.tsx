@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { SyncResult } from '@/types';
 import { useSync } from '@/contexts/AppProvider';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import TableSkeleton from '@/components/TableSkeleton';
 import { formatDateTime } from '@/lib/utils';
 
 const SyncPage = () => {
@@ -86,49 +87,49 @@ const SyncPage = () => {
       </div>
 
       {/* Sync History */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">Sync History</h2>
-        </div>
-        
-        <div className="divide-y divide-gray-200">
-          {syncHistory.length === 0 ? (
-            <div className="p-6 text-center text-gray-500">
-              No sync history available. Perform your first sync to see results here.
-            </div>
-          ) : (
-            syncHistory.map((result, index) => (
-              <div key={index} className="p-6">
-                <div className="flex items-start space-x-4">
-                  <div className="flex-shrink-0 text-2xl">
-                    {getStatusIcon(result.success)}
-                  </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <p className={`text-sm font-medium ${getStatusColor(result.success)}`}>
-                        {result.success ? 'Sync Successful' : 'Sync Failed'}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        {formatDateTime(result.timestamp)}
-                      </p>
+      {loading && syncHistory.length === 0 ? (
+        <TableSkeleton columns={3} title="Loading sync history" />
+      ) : (
+        <div className="relative bg-white rounded-lg shadow">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h2 className="text-xl font-semibold text-gray-900">Sync History</h2>
+          </div>
+          <div className="divide-y divide-gray-200">
+            {syncHistory.length === 0 ? (
+              <div className="p-6 text-center text-gray-500">
+                No sync history available. Perform your first sync to see results here.
+              </div>
+            ) : (
+              syncHistory.map((result, index) => (
+                <div key={index} className="p-6">
+                  <div className="flex items-start space-x-4">
+                    <div className="flex-shrink-0 text-2xl">
+                      {getStatusIcon(result.success)}
                     </div>
-                    
-                    <div className={`mt-2 p-3 rounded-md border ${getStatusBgColor(result.success)}`}>
-                      <p className="text-sm text-gray-800">{result.message}</p>
-                      {result.recordsSync > 0 && (
-                        <p className="text-xs text-gray-600 mt-1">
-                          Records synced: {result.recordsSync}
-                        </p>
-                      )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <p className={`text-sm font-medium ${getStatusColor(result.success)}`}>{result.success ? 'Sync Successful' : 'Sync Failed'}</p>
+                        <p className="text-sm text-gray-500">{formatDateTime(result.timestamp)}</p>
+                      </div>
+                      <div className={`mt-2 p-3 rounded-md border ${getStatusBgColor(result.success)}`}>
+                        <p className="text-sm text-gray-800">{result.message}</p>
+                        {result.recordsSync > 0 && (
+                          <p className="text-xs text-gray-600 mt-1">Records synced: {result.recordsSync}</p>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))
+              ))
+            )}
+          </div>
+          {loading && syncHistory.length > 0 && (
+            <div className="absolute inset-0 bg-white/60 flex items-center justify-center rounded-md">
+              <LoadingSpinner size="md" text="Refreshing..." />
+            </div>
           )}
         </div>
-      </div>
+      )}
 
       {/* Configuration removed */}
     </div>

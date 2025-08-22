@@ -6,6 +6,7 @@ import { Claim, ClaimStatus } from '@/types';
 import { useClaim } from '@/contexts/AppProvider';
 import ClaimForm from '@/components/ClaimForm';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import TableSkeleton from '@/components/TableSkeleton';
 import { formatDate, formatCurrency, showToast } from '@/lib/utils';
 import ConfirmModal from '@/components/ConfirmModal';
 
@@ -18,7 +19,7 @@ const ClaimsPage = () => {
   
   const [showForm, setShowForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);  
-  const [updatingClaim, setUpdatingClaim] = useState<string | null>(null);
+  // Removed row-level updating, rely on overlay via global loading
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [confirm, setConfirm] = useState<{ open: boolean; claimId?: string; action?: 'approved' | 'denied' | 'pending' }>(
     { open: false }
@@ -46,7 +47,6 @@ const ClaimsPage = () => {
   };
 
   const handleStatusUpdate = async (claimId: string, newStatus: Claim['status']) => {
-    setUpdatingClaim(claimId);
     try {
       const updatedClaim = await actions.updateClaimStatus(claimId, newStatus);
       if (updatedClaim) {
@@ -56,8 +56,6 @@ const ClaimsPage = () => {
       }
     } catch (error) {
       showToast('error', 'Failed to update claim status. Please try again.');
-    } finally {
-      setUpdatingClaim(null);
     }
   };
 
@@ -167,112 +165,70 @@ const ClaimsPage = () => {
       
 
       {/* Claims Table */}
-      <div className="bg-white shadow overflow-hidden sm:rounded-md">
-        <div className="px-4 py-5 sm:px-6">
-          <h3 className="text-lg leading-6 font-medium text-gray-900">
-            Claims List ({filteredClaims.length})
-          </h3>
-        </div>
-        
-        {filteredClaims.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-gray-500">
-              {statusFilter === 'All' 
-                ? 'No claims found. Add your first claim to get started.' 
-                : `No ${statusFilter.toLowerCase()} claims found.`}
-            </p>
+      {isInitialLoading ? (
+        <TableSkeleton columns={6} title="Loading claims" />
+      ) : (
+        <div className="relative bg-white shadow overflow-hidden sm:rounded-md">
+          <div className="px-4 py-5 sm:px-6">
+            <h3 className="text-lg leading-6 font-medium text-gray-900">
+              Claims List ({filteredClaims.length})
+            </h3>
           </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Patient
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Claim #
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Amount
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Service Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredClaims.map((claim) => (
-                  <tr key={claim.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {claim.patientName}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-900 max-w-xs">
-                      <div className="truncate" title={claim.claimNumber}>{claim.claimNumber}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {formatCurrency(claim.amount)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeColor(claim.status)}`}>
-                        {claim.status.charAt(0).toUpperCase() + claim.status.slice(1)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {formatDate(claim.serviceDate)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      <div className="flex space-x-2">
-                        {claim.status === 'pending' ? (
-                          <>
-                            <button
-                              onClick={() => requestStatusChange(claim.id, 'approved')}
-                              disabled={updatingClaim === claim.id}
-                              className="text-green-600 hover:text-green-900 disabled:opacity-50"
-                            >
-                              {updatingClaim === claim.id ? (
-                                <LoadingSpinner size="sm" />
-                              ) : (
-                                'Approve'
-                              )}
-                            </button>
-                            <button
-                              onClick={() => requestStatusChange(claim.id, 'denied')}
-                              disabled={updatingClaim === claim.id}
-                              className="text-red-600 hover:text-red-900 disabled:opacity-50"
-                            >
-                              {updatingClaim === claim.id ? (
-                                <LoadingSpinner size="sm" />
-                              ) : (
-                                'Deny'
-                              )}
-                            </button>
-                          </>
-                        ) : (
-                          <span className="text-gray-400">Finalized</span>
-                        )}
-                      </div>
-                    </td>
+          {filteredClaims.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-500">
+                {statusFilter === 'All' 
+                  ? 'No claims found. Add your first claim to get started.' 
+                  : `No ${statusFilter.toLowerCase()} claims found.`}
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Patient</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Claim #</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service Date</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-
-      {/* Overlay loader during status update */}
-      {loading && filteredClaims.length > 0 && (
-        <div className="absolute inset-0 bg-white/60 flex items-center justify-center rounded-md">
-          <LoadingSpinner size="md" text="Updating..." />
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredClaims.map((claim) => (
+                    <tr key={claim.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{claim.patientName}</td>
+                      <td className="px-6 py-4 text-sm text-gray-900 max-w-xs"><div className="truncate" title={claim.claimNumber}>{claim.claimNumber}</div></td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{formatCurrency(claim.amount)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap"><span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeColor(claim.status)}`}>{claim.status.charAt(0).toUpperCase() + claim.status.slice(1)}</span></td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(claim.serviceDate)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <div className="flex space-x-2">
+                          {claim.status === 'pending' ? (
+                            <>
+                              <button onClick={() => requestStatusChange(claim.id, 'approved')} className="text-green-600 hover:text-green-900">Approve</button>
+                              <button onClick={() => requestStatusChange(claim.id, 'denied')} className="text-red-600 hover:text-red-900">Deny</button>
+                            </>
+                          ) : (
+                            <span className="text-gray-400">Finalized</span>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          {loading && filteredClaims.length > 0 && (
+            <div className="absolute inset-0 bg-white/60 flex items-center justify-center rounded-md">
+              <LoadingSpinner size="md" text="Refreshing..." />
+            </div>
+          )}
         </div>
       )}
+
 
       {/* Add Claim Form Modal */}
       {showForm && (
@@ -291,7 +247,7 @@ const ClaimsPage = () => {
         message={confirm.action === 'approved' ? 'Are you sure you want to approve this claim?' : confirm.action === 'denied' ? 'Are you sure you want to deny this claim?' : 'Are you sure you want to mark this claim as pending?'}
         confirmLabel={confirm.action === 'approved' ? 'Yes, Approve' : confirm.action === 'denied' ? 'Yes, Deny' : 'Yes, Pending'}
         confirmColor={confirm.action === 'approved' ? 'green' : confirm.action === 'denied' ? 'red' : 'yellow'}
-        isLoading={!!updatingClaim}
+        isLoading={loading}
         onConfirm={handleConfirm}
         onCancel={handleCancel}
       />
