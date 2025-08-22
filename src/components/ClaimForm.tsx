@@ -1,9 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Claim, Patient } from '@/types';
-import { CreateClaimRequest } from '@/types/api';
 import { usePatient } from '@/contexts/AppProvider';
+import { CreateClaimRequest } from '@/types/api';
 
 interface ClaimFormProps {
   onSubmit: (claim: CreateClaimRequest) => void;

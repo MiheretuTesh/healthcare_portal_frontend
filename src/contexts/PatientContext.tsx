@@ -112,7 +112,7 @@ export function PatientProvider({ children }: PatientProviderProps) {
         dispatch({ type: 'SET_ERROR', payload: response.error || 'Failed to load patients' });
         dispatch({ type: 'SET_PATIENTS', payload: [] });
       }
-    } catch (error) {
+    } catch (_error) {
       dispatch({ type: 'SET_ERROR', payload: 'Network error occurred' });
       dispatch({ type: 'SET_PATIENTS', payload: [] });
     }
@@ -132,7 +132,7 @@ export function PatientProvider({ children }: PatientProviderProps) {
         dispatch({ type: 'SET_LOADING', payload: false });
         return null;
       }
-    } catch (error) {
+    } catch (_error) {
       dispatch({ type: 'SET_ERROR', payload: 'Network error occurred' });
       dispatch({ type: 'SET_SELECTED_PATIENT', payload: null });
       dispatch({ type: 'SET_LOADING', payload: false });
@@ -152,8 +152,8 @@ export function PatientProvider({ children }: PatientProviderProps) {
         dispatch({ type: 'SET_ERROR', payload: msg });
         throw new Error(msg);
       }
-    } catch (error: any) {
-      const msg = error?.message || 'Network error occurred';
+    } catch (_error) {
+      const msg = 'Network error occurred';
       dispatch({ type: 'SET_ERROR', payload: msg });
       throw new Error(msg);
     }
@@ -170,7 +170,7 @@ export function PatientProvider({ children }: PatientProviderProps) {
         dispatch({ type: 'SET_ERROR', payload: response.error || 'Failed to update patient' });
         return null;
       }
-    } catch (error) {
+    } catch (_error) {
       dispatch({ type: 'SET_ERROR', payload: 'Network error occurred' });
       return null;
     }
@@ -187,7 +187,7 @@ export function PatientProvider({ children }: PatientProviderProps) {
         dispatch({ type: 'SET_ERROR', payload: response.error || 'Failed to delete patient' });
         return false;
       }
-    } catch (error) {
+    } catch (_error) {
       dispatch({ type: 'SET_ERROR', payload: 'Network error occurred' });
       return false;
     }

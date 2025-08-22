@@ -107,8 +107,9 @@ export function SyncProvider({ children }: SyncProviderProps) {
         dispatch({ type: 'SET_ERROR', payload: response.error || 'Sync failed' });
         return null;
       }
-    } catch (error) {
+    } catch (_error) {
       dispatch({ type: 'SET_ERROR', payload: 'Network error occurred' });
+      dispatch({ type: 'SET_SYNC_HISTORY', payload: [] });
       return null;
     }
   }, []);
@@ -130,9 +131,10 @@ export function SyncProvider({ children }: SyncProviderProps) {
         dispatch({ type: 'SET_ERROR', payload: response.error || 'Sync failed' });
         return null;
       }
-    } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: 'Network error occurred' });
-      return null;
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Network error occurred';
+      dispatch({ type: 'SET_ERROR', payload: errorMessage });
+      throw new Error(errorMessage);
     }
   }, []);
 
@@ -141,7 +143,14 @@ export function SyncProvider({ children }: SyncProviderProps) {
     try {
       const response = await syncApi.fetchHistory();
       if (response.success && response.data) {
-        const mapped: SyncResult[] = response.data.map((h: any) => ({
+        interface HistoryItem {
+          type: string;
+          count: number;
+          inserted_rows?: number[];
+          created_at: string;
+        }
+        
+        const mapped: SyncResult[] = response.data.map((h: HistoryItem) => ({
           success: true,
           message: `${h.type}: inserted ${h.count} rows (${(h.inserted_rows || []).join(', ')})`,
           timestamp: h.created_at,
@@ -151,7 +160,7 @@ export function SyncProvider({ children }: SyncProviderProps) {
       } else {
         dispatch({ type: 'SET_LOADING', payload: false });
       }
-    } catch (error) {
+    } catch (_error) {
       dispatch({ type: 'SET_LOADING', payload: false });
     }
   }, []);
@@ -171,7 +180,7 @@ export function SyncProvider({ children }: SyncProviderProps) {
       } else {
         dispatch({ type: 'SET_LOADING', payload: false });
       }
-    } catch (error) {
+    } catch (_error) {
       dispatch({ type: 'SET_LOADING', payload: false });
     }
   }, []);

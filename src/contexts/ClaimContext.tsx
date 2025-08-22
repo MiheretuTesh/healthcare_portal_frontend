@@ -159,7 +159,7 @@ export function ClaimProvider({ children }: ClaimProviderProps) {
         dispatch({ type: 'SET_ERROR', payload: response.error || 'Failed to load claims' });
         dispatch({ type: 'SET_CLAIMS', payload: [] });
       }
-    } catch (error) {
+    } catch (_error) {
       dispatch({ type: 'SET_ERROR', payload: 'Network error occurred' });
       dispatch({ type: 'SET_CLAIMS', payload: [] });
     }
@@ -179,7 +179,7 @@ export function ClaimProvider({ children }: ClaimProviderProps) {
         dispatch({ type: 'SET_LOADING', payload: false });
         return null;
       }
-    } catch (error) {
+    } catch (_error) {
       dispatch({ type: 'SET_ERROR', payload: 'Network error occurred' });
       dispatch({ type: 'SET_SELECTED_CLAIM', payload: null });
       dispatch({ type: 'SET_LOADING', payload: false });
@@ -198,7 +198,7 @@ export function ClaimProvider({ children }: ClaimProviderProps) {
         dispatch({ type: 'SET_ERROR', payload: response.error || 'Failed to create claim' });
         return null;
       }
-    } catch (error) {
+    } catch (_error) {
       dispatch({ type: 'SET_ERROR', payload: 'Network error occurred' });
       return null;
     }
@@ -215,7 +215,7 @@ export function ClaimProvider({ children }: ClaimProviderProps) {
         dispatch({ type: 'SET_ERROR', payload: response.error || 'Failed to update claim' });
         return null;
       }
-    } catch (error) {
+    } catch (_error) {
       dispatch({ type: 'SET_ERROR', payload: 'Network error occurred' });
       return null;
     }
@@ -248,7 +248,7 @@ export function ClaimProvider({ children }: ClaimProviderProps) {
         dispatch({ type: 'SET_ERROR', payload: 'Claim not found' });
         return null;
       }
-    } catch (error) {
+    } catch (_error) {
       // Fallback for development
       const existingClaim = stateRef.current.claims.find(c => c.id === id);
       if (existingClaim) {
@@ -277,7 +277,7 @@ export function ClaimProvider({ children }: ClaimProviderProps) {
         dispatch({ type: 'SET_ERROR', payload: response.error || 'Failed to delete claim' });
         return false;
       }
-    } catch (error) {
+    } catch (_error) {
       dispatch({ type: 'SET_ERROR', payload: 'Network error occurred' });
       return false;
     }

@@ -24,7 +24,7 @@ const PatientClaimsPage = () => {
         patientActions.fetchPatientById(patientId);
       }
     }
-  }, [patientId, claimActions, patientActions]);
+  }, [patientId, claimActions, patientActions, patient]);
 
   const isInitialLoading = claimState.loading && claimState.filteredClaims.length === 0;
 

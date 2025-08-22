@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { SyncResult } from '@/types';
 import { useSync } from '@/contexts/AppProvider';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import TableSkeleton from '@/components/TableSkeleton';

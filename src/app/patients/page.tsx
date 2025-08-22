@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Patient } from '@/types';
 import { usePatient } from '@/contexts/AppProvider';
 import PatientForm from '@/components/PatientForm';
 import LoadingSpinner from '@/components/LoadingSpinner';
@@ -12,11 +11,10 @@ import { showToast } from '@/lib/utils';
 
 const PatientsPage = () => {
   const { state, actions } = usePatient();
-  const { patients, loading, error } = state;
+  const { patients, loading } = state;
   
   const [showForm, setShowForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
     actions.fetchPatients();
@@ -32,14 +30,13 @@ const PatientsPage = () => {
       } else {
         showToast('error', 'Failed to add patient. Please try again.');
       }
-    } catch (error: any) {
-      showToast('error', error?.message || 'Failed to add patient. Please try again.');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to add patient. Please try again.';
+      showToast('error', errorMessage);
     } finally {
       setIsSubmitting(false);
     }
   };
-
-
 
   const isInitialLoading = loading && patients.length === 0;
 
@@ -50,17 +47,6 @@ const PatientsPage = () => {
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Patients</h1>
         <p className="text-gray-600">Manage patient information and view their claims</p>
       </div>
-
-      {/* Success/Error Messages */}
-      {message && (
-        <div className={`mb-6 p-4 rounded-md ${
-          message.type === 'success' 
-            ? 'bg-green-50 border border-green-200 text-green-800' 
-            : 'bg-red-50 border border-red-200 text-red-800'
-        }`}>
-          {message.text}
-        </div>
-      )}
 
       {/* Add Patient Button */}
       <div className="mb-6">

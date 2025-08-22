@@ -1,12 +1,33 @@
-import { Patient, Claim, SyncResult } from '@/types';
+import { Patient, Claim } from '@/types';
 import { 
   ApiResponse, 
   CreatePatientRequest, 
   UpdatePatientRequest,
   CreateClaimRequest,
-  UpdateClaimRequest,
-  SyncRequest
+  UpdateClaimRequest
 } from '@/types/api';
+
+// Types for API responses from backend
+interface BackendPatient {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  insurance_provider: string;
+}
+
+interface BackendClaim {
+  id: number;
+  claim_number: string;
+  amount: string | number;
+  status: string;
+  service_date: string;
+  patient?: BackendPatient;
+  patientId?: number;
+  patient_id?: number;
+  patientName?: string;
+  claimNumber?: string;
+}
 
 // Base API configuration via environment
 // Prefer explicit APP env mapping; fall back to a single URL or localhost
@@ -52,44 +73,46 @@ async function apiRequest<T>(
 }
 
 // Adapters between backend shapes and FE types
-function adaptPatientFromApi(p: any): Patient {
+function adaptPatientFromApi(p: BackendPatient): Patient {
   return {
     id: String(p.id),
-    name: p.name,
-    email: p.email,
-    phone: p.phone,
-    insuranceProvider: p.insurance_provider,
+    name: String(p.name),
+    email: String(p.email),
+    phone: String(p.phone),
+    insuranceProvider: String(p.insurance_provider),
   };
 }
 
 function adaptPatientToApi(p: CreatePatientRequest | UpdatePatientRequest) {
-  const base: any = {
+  const base: Record<string, unknown> = {
     name: p.name,
     email: p.email,
     phone: p.phone,
-    insurance_provider: (p as any).insuranceProvider,
+    insurance_provider: (p as CreatePatientRequest).insuranceProvider,
   };
   return base;
 }
 
-function adaptClaimFromApi(c: any): Claim {
+function adaptClaimFromApi(c: BackendClaim): Claim {
+  const patient = c.patient as BackendPatient | undefined;
   return {
     id: String(c.id),
-    patientId: String(c.patient?.id ?? c.patientId ?? c.patient_id),
-    patientName: c.patient?.name ?? c.patientName ?? '',
-    claimNumber: c.claim_number ?? c.claimNumber ?? '',
+    patientId: String(patient?.id ?? c.patientId ?? c.patient_id),
+    patientName: String(patient?.name ?? c.patientName ?? ''),
+    claimNumber: String(c.claim_number ?? c.claimNumber ?? ''),
     amount: typeof c.amount === 'string' ? parseFloat(c.amount) : Number(c.amount),
-    status: c.status,
-    serviceDate: c.service_date,
+    status: c.status as Claim['status'],
+    serviceDate: String(c.service_date),
   };
 }
 
 function adaptClaimToApi(c: CreateClaimRequest | UpdateClaimRequest) {
+  const claim = c as CreateClaimRequest;
   return {
-    amount: String((c as any).amount),
-    status: (c as any).status,
-    service_date: (c as any).serviceDate,
-    patientId: typeof (c as any).patientId === 'string' ? parseInt((c as any).patientId, 10) : (c as any).patientId,
+    amount: String(claim.amount),
+    status: claim.status,
+    service_date: claim.serviceDate,
+    patientId: typeof claim.patientId === 'string' ? parseInt(claim.patientId, 10) : claim.patientId,
   };
 }
 
@@ -97,40 +120,44 @@ function adaptClaimToApi(c: CreateClaimRequest | UpdateClaimRequest) {
 export const patientApi = {
   // Get all patients
   getAll: async (): Promise<ApiResponse<Patient[]>> => {
-    const res = await apiRequest<any[]>('/patients');
-    return res.success && res.data
-      ? { success: true, data: res.data.map(adaptPatientFromApi) }
-      : res as any;
+    const res = await apiRequest<BackendPatient[]>('/patients');
+    if (res.success && res.data) {
+      return { success: true, data: res.data.map(adaptPatientFromApi) };
+    }
+    return { success: false, error: res.error };
   },
 
   // Get patient by ID
   getById: async (id: string): Promise<ApiResponse<Patient>> => {
-    const res = await apiRequest<any>(`/patients/${id}`);
-    return res.success && res.data
-      ? { success: true, data: adaptPatientFromApi(res.data) }
-      : res as any;
+    const res = await apiRequest<BackendPatient>(`/patients/${id}`);
+    if (res.success && res.data) {
+      return { success: true, data: adaptPatientFromApi(res.data) };
+    }
+    return { success: false, error: res.error };
   },
 
   // Create new patient
   create: async (patient: CreatePatientRequest): Promise<ApiResponse<Patient>> => {
-    const res = await apiRequest<any>('/patients', {
+    const res = await apiRequest<BackendPatient>('/patients', {
       method: 'POST',
       body: JSON.stringify(adaptPatientToApi(patient)),
     });
-    return res.success && res.data
-      ? { success: true, data: adaptPatientFromApi(res.data) }
-      : res as any;
+    if (res.success && res.data) {
+      return { success: true, data: adaptPatientFromApi(res.data) };
+    }
+    return { success: false, error: res.error };
   },
 
   // Update patient
   update: async (patient: UpdatePatientRequest): Promise<ApiResponse<Patient>> => {
-    const res = await apiRequest<any>(`/patients/${patient.id}`, {
+    const res = await apiRequest<BackendPatient>(`/patients/${patient.id}`, {
       method: 'PUT',
       body: JSON.stringify(adaptPatientToApi(patient)),
     });
-    return res.success && res.data
-      ? { success: true, data: adaptPatientFromApi(res.data) }
-      : res as any;
+    if (res.success && res.data) {
+      return { success: true, data: adaptPatientFromApi(res.data) };
+    }
+    return { success: false, error: res.error };
   },
 
   // Delete patient
@@ -146,51 +173,56 @@ export const claimApi = {
   // Get all claims
   getAll: async (patientId?: string): Promise<ApiResponse<Claim[]>> => {
     const url = patientId ? `/patients/${patientId}/claims` : '/claims';
-    const res = await apiRequest<any[]>(url);
-    return res.success && res.data
-      ? { success: true, data: res.data.map(adaptClaimFromApi) }
-      : res as any;
+    const res = await apiRequest<BackendClaim[]>(url);
+    if (res.success && res.data) {
+      return { success: true, data: res.data.map(adaptClaimFromApi) };
+    }
+    return { success: false, error: res.error };
   },
 
   // Get claim by ID
   getById: async (id: string): Promise<ApiResponse<Claim>> => {
-    const res = await apiRequest<any>(`/claims/${id}`);
-    return res.success && res.data
-      ? { success: true, data: adaptClaimFromApi(res.data) }
-      : res as any;
+    const res = await apiRequest<BackendClaim>(`/claims/${id}`);
+    if (res.success && res.data) {
+      return { success: true, data: adaptClaimFromApi(res.data) };
+    }
+    return { success: false, error: res.error };
   },
 
   // Create new claim
   create: async (claim: CreateClaimRequest): Promise<ApiResponse<Claim>> => {
-    const res = await apiRequest<any>('/claims', {
+    const res = await apiRequest<BackendClaim>('/claims', {
       method: 'POST',
       body: JSON.stringify(adaptClaimToApi(claim)),
     });
-    return res.success && res.data
-      ? { success: true, data: adaptClaimFromApi(res.data) }
-      : res as any;
+    if (res.success && res.data) {
+      return { success: true, data: adaptClaimFromApi(res.data) };
+    }
+    return { success: false, error: res.error };
   },
 
   // Update claim
   update: async (claim: UpdateClaimRequest): Promise<ApiResponse<Claim>> => {
-    const res = await apiRequest<any>(`/claims/${claim.id}`, {
+    const res = await apiRequest<BackendClaim>(`/claims/${claim.id}`, {
       method: 'PUT',
       body: JSON.stringify(adaptClaimToApi(claim)),
     });
-    return res.success && res.data
-      ? { success: true, data: adaptClaimFromApi(res.data) }
-      : res as any;
+    if (res.success && res.data) {
+      return { success: true, data: adaptClaimFromApi(res.data) };
+    }
+    return { success: false, error: res.error };
   },
 
   // Update claim status
   updateStatus: async (id: string, status: Claim['status']): Promise<ApiResponse<Claim>> => {
-    const res = await apiRequest<any>(`/claims/${id}/status`, {
+    const res = await apiRequest<BackendClaim>(`/claims/${id}/status`, {
       method: 'PUT',
       body: JSON.stringify({ status }),
     });
-    return res.success && res.data
-      ? { success: true, data: adaptClaimFromApi(res.data) }
-      : res as any;
+    if (res.success && res.data) {
+      return { success: true, data: adaptClaimFromApi(res.data) };
+    }
+    return { success: false, error: res.error };
   },
 
   // Delete claim
@@ -218,8 +250,18 @@ export const syncApi = {
   },
 
   // Fetch recent sync history
-  fetchHistory: async (): Promise<ApiResponse<any[]>> => {
-    return apiRequest<any[]>('/sync/google-sheets/history', {
+  fetchHistory: async (): Promise<ApiResponse<Array<{
+    type: string;
+    count: number;
+    inserted_rows?: number[];
+    created_at: string;
+  }>>> => {
+    return apiRequest<Array<{
+      type: string;
+      count: number;
+      inserted_rows?: number[];
+      created_at: string;
+    }>>('/sync/google-sheets/history', {
       method: 'POST',
     });
   },

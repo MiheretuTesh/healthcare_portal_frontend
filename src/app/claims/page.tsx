@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Claim, ClaimStatus } from '@/types';
 import { useClaim } from '@/contexts/AppProvider';
@@ -9,18 +9,17 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import TableSkeleton from '@/components/TableSkeleton';
 import { formatDate, formatCurrency, showToast } from '@/lib/utils';
 import ConfirmModal from '@/components/ConfirmModal';
+import { CreateClaimRequest } from '@/types/api';
 
-const ClaimsPage = () => {
+const ClaimsPageContent = () => {
   const searchParams = useSearchParams();
   const preselectedPatientId = searchParams.get('patientId');
   
   const { state, actions } = useClaim();
-  const { filteredClaims, loading, error, statusFilter } = state;
+  const { filteredClaims, loading, statusFilter } = state;
   
   const [showForm, setShowForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);  
-  // Removed row-level updating, rely on overlay via global loading
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [confirm, setConfirm] = useState<{ open: boolean; claimId?: string; action?: 'approved' | 'denied' | 'pending' }>(
     { open: false }
   );
@@ -29,7 +28,7 @@ const ClaimsPage = () => {
     actions.fetchClaims(preselectedPatientId || undefined);
   }, [actions, preselectedPatientId]);
 
-  const handleAddClaim = async (claimData: any) => {
+  const handleAddClaim = async (claimData: CreateClaimRequest) => {
     setIsSubmitting(true);
     try {
       const newClaim = await actions.createClaim(claimData);
@@ -39,7 +38,7 @@ const ClaimsPage = () => {
       } else {
         showToast('error', 'Failed to add claim. Please try again.');
       }
-    } catch (error) {
+    } catch {
       showToast('error', 'Failed to add claim. Please try again.');
     } finally {
       setIsSubmitting(false);
@@ -54,7 +53,7 @@ const ClaimsPage = () => {
       } else {
         showToast('error', 'Failed to update claim status. Please try again.');
       }
-    } catch (error) {
+    } catch {
       showToast('error', 'Failed to update claim status. Please try again.');
     }
   };
@@ -70,8 +69,6 @@ const ClaimsPage = () => {
   };
 
   const handleCancel = () => setConfirm({ open: false });
-
-
 
   const getStatusBadgeColor = (status: Claim['status']) => {
     switch (status) {
@@ -151,19 +148,6 @@ const ClaimsPage = () => {
         </div>
       </div>
 
-      {/* Success/Error Messages */}
-      {message && (
-        <div className={`mb-6 p-4 rounded-md ${
-          message.type === 'success' 
-            ? 'bg-green-50 border border-green-200 text-green-800' 
-            : 'bg-red-50 border border-red-200 text-red-800'
-        }`}>
-          {message.text}
-        </div>
-      )}
-
-      
-
       {/* Claims Table */}
       {isInitialLoading ? (
         <TableSkeleton columns={6} title="Loading claims" />
@@ -229,7 +213,6 @@ const ClaimsPage = () => {
         </div>
       )}
 
-
       {/* Add Claim Form Modal */}
       {showForm && (
         <ClaimForm
@@ -252,6 +235,14 @@ const ClaimsPage = () => {
         onCancel={handleCancel}
       />
     </div>
+  );
+};
+
+const ClaimsPage = () => {
+  return (
+    <Suspense fallback={<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"><LoadingSpinner size="lg" text="Loading..." /></div>}>
+      <ClaimsPageContent />
+    </Suspense>
   );
 };
 
