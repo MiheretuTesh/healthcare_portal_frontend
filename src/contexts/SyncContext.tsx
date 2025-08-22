@@ -152,7 +152,9 @@ export function SyncProvider({ children }: SyncProviderProps) {
         
         const mapped: SyncResult[] = response.data.map((h: HistoryItem) => ({
           success: true,
-          message: `${h.type}: inserted ${h.count} rows (${(h.inserted_rows || []).join(', ')})`,
+          message: h.inserted_rows && h.inserted_rows.length > 0 
+            ? `${h.type}: inserted ${h.count} rows (${h.inserted_rows.join(', ')})`
+            : `${h.type}: inserted ${h.count} rows`,
           timestamp: h.created_at,
           recordsSync: h.count,
         }));
